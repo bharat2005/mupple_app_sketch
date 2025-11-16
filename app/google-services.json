@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "372927817742",
+    "project_id": "mupplesketchapp-a4567",
+    "storage_bucket": "mupplesketchapp-a4567.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372927817742:android:232d259b85ee60bc42f45f",
+        "android_client_info": {
+          "package_name": "com.bharat.mupple_sketch_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "372927817742-p1rmeqnnnc91985e2mpi502ot0bhgtin.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bharat.mupple_sketch_app",
+            "certificate_hash": "1c6b3c7f6f481901613c34a8c2916b5a5080573b"
+          }
+        },
+        {
+          "client_id": "372927817742-kjlr958f15j7dqdupa54qeetivc0nove.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcKIqZthXpFvsFik8zwI52AoMeK9fOMp4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "372927817742-kjlr958f15j7dqdupa54qeetivc0nove.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
