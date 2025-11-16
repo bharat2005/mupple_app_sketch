@@ -11,43 +11,49 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 data class LoginUiState(
-    val isLoggingIn : Boolean = false,
-    val loginSuccess : Boolean = false,
+    val isLoading : Boolean = false,
     val loginError : String? = null
 )
 @HiltViewModel
 class StartViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase
- ) : ViewModel() {
+) : ViewModel() {
 
-     private val _uiState = MutableStateFlow(LoginUiState())
-     val uiState = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState = _uiState.asStateFlow()
 
-    fun onLoginError(error : String){
-        _uiState.update { it.copy(loginError =  error) }
-    }
-
-    fun onErrorDissMiss(){
-        _uiState.update { it.copy(loginError = null) }
+    fun onError(error : String){
+        _uiState.update { it.copy(
+            loginError = error
+        ) }
     }
 
     fun setLoading(isLoading : Boolean){
-        _uiState.update { it.copy(isLoggingIn = isLoading) }
+        _uiState.update { it.copy(isLoading = isLoading) }
     }
 
-    fun onLocalGoogleSignInSuccess(idToken: String){
-        val cred = GoogleAuthProvider.getCredential(idToken, null)
-        viewModelScope.launch {
-            loginWithGoogleUseCase(cred).collect { result ->
-                result.fold(
-                    onSuccess = {
 
-                    },
-                    onFailure = { e -> onLoginError(e.message ?: "Unknown Error") }
+    fun onErrorDismiss(){
+        _uiState.update { it.copy(loginError =  null) }
+    }
+
+
+    fun onLocalGoogleSignInSuccess(idToken : String, email : String){
+         val cred = GoogleAuthProvider.getCredential(idToken, null)
+        viewModelScope.launch {
+            loginWithGoogleUseCase(cred, email).collect { result ->
+                result.fold(
+                    onSuccess = { _uiState.update { it.copy(isLoading = false, loginError = null) } },
+                    onFailure = { e -> _uiState.update { it.copy(isLoading = false, loginError = e.message) } }
                 )
             }
-
         }
     }
- }
+
+
+
+
+
+}

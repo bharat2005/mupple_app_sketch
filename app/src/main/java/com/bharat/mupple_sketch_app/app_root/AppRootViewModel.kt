@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -21,32 +22,25 @@ enum class AuthState{
 
 @HiltViewModel
 class AppRootViewModel @Inject constructor(
-    private val authInstance : FirebaseAuth
+    private val firebaseAuth : FirebaseAuth
 ) : ViewModel() {
 
     private val firebaseFlow = callbackFlow {
-        val listner = FirebaseAuth.AuthStateListener { currentUser ->
-            trySend(currentUser)
+        val listner = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            trySend(  if(firebaseAuth.currentUser != null) AuthState.AUTHENTICATED else AuthState.UNAUTHENTICATED)
         }
-        authInstance.addAuthStateListener(listner)
+        firebaseAuth.addAuthStateListener(listner)
         awaitClose {
-            authInstance.removeAuthStateListener(listner)
+            firebaseAuth.removeAuthStateListener(listner)
         }
     }
 
     val authState = firebaseFlow
-        .map { currentUser ->
-            if(currentUser != null) AuthState.AUTHENTICATED else AuthState.AUTHENTICATED
-        }.stateIn(
+        .distinctUntilChanged()
+        .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = AuthState.UNKNOWN
         )
-
-
-
-
-
-
 
 }

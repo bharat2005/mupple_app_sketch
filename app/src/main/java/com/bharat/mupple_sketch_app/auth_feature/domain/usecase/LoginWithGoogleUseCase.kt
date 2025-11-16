@@ -8,7 +8,7 @@ import javax.inject.Inject
 class LoginWithGoogleUseCase @Inject constructor(
     private val authRepo : AuthRepo
 ) {
-    operator fun invoke(cred : AuthCredential) : Flow<Result<Unit>>{
-        return authRepo.loginWithGoogle(cred)
+    operator fun invoke(cred : AuthCredential, email : String) : Flow<Result<Unit>>{
+        return authRepo.loginWithGoogle(cred, email)
     }
 }
