@@ -2,6 +2,7 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerAuth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bharat.mupple_sketch_app.app_root.AuthListnerFlag
 import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.RegisterWithGoogleUseCase
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +21,8 @@ data class RegisterUiState(
 
 @HiltViewModel
 class RegisterAuthViewModel @Inject constructor(
-    private val registerWithGoogleUseCase: RegisterWithGoogleUseCase
+    private val registerWithGoogleUseCase: RegisterWithGoogleUseCase,
+    private val authListnerFlag: AuthListnerFlag
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -59,6 +61,15 @@ class RegisterAuthViewModel @Inject constructor(
     }
 
 
+    init {
+        viewModelScope.launch {
+            authListnerFlag.authListenerState.collect { errorMsg ->
+                if(errorMsg != null){
+                    _uiState.update { it.copy(isLoading = false, registerError = errorMsg, registerSuccess = false) }
+                }
+            }
+        }
+    }
 
 
 
