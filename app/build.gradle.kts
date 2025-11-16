@@ -75,6 +75,9 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.6")
     implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
+    //PlayServies
+    implementation("com.google.android.gms:play-services:12.0.1")
+
 
 
 

@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
+import com.bharat.mupple_sketch_app.app_root.splash.SplashScreen
 
 @Composable
 fun AppRoot(
@@ -36,8 +37,10 @@ fun AppRoot(
             startDestination = startDestination
         ){
             composable(AppRoutes.SplashRoute) {
-
+                SplashScreen()
             }
+
+
 
 
 
