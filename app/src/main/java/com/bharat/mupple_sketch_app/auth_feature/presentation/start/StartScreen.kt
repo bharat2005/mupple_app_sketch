@@ -32,7 +32,8 @@ import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun StartScreen(
-    viewModel : StartViewModel = hiltViewModel()
+    viewModel : StartViewModel = hiltViewModel(),
+    onGetStated : () -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -75,9 +76,7 @@ fun StartScreen(
     ) {
 
         Button(
-        onClick = {
-
-        }
+        onClick = onGetStated
         ) {
             Text("Get STarted")
         }

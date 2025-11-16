@@ -5,6 +5,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.bharat.mupple_sketch_app.app_root.AppRoutes
+import com.bharat.mupple_sketch_app.auth_feature.presentation.registerAuth.RegisterAuthAScreen
+import com.bharat.mupple_sketch_app.auth_feature.presentation.registerStepForm.RegisterStepFormScreen
 import com.bharat.mupple_sketch_app.auth_feature.presentation.start.StartScreen
 
 fun NavGraphBuilder.authNavGraph(navController: NavController){
@@ -13,7 +15,23 @@ fun NavGraphBuilder.authNavGraph(navController: NavController){
         startDestination = AuthRoutes.StartRoute
     ){
         composable(AuthRoutes.StartRoute) {
-            StartScreen()
+            StartScreen(
+                onGetStated = {navController.navigate(AuthRoutes.RegisterAuth)}
+            )
+        }
+
+        composable(AuthRoutes.RegisterAuth) {
+            RegisterAuthAScreen(
+                onExit = {navController.navigateUp()},
+                onRegisterSuccess = {navController.navigate(AuthRoutes.RegisterStepForm)}
+            )
+        }
+
+        composable(AuthRoutes.RegisterStepForm) {
+            RegisterStepFormScreen(
+                navigateBack = {navController.navigateUp()}
+
+            )
         }
     }
 }
