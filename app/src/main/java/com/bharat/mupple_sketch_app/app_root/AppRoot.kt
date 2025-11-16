@@ -12,6 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
 import com.bharat.mupple_sketch_app.app_root.splash.SplashScreen
+import com.bharat.mupple_sketch_app.auth_feature.presentation.navigation.authNavGraph
+import com.bharat.mupple_sketch_app.main_feature.presentation.navigation.mainNavGraph
 
 @Composable
 fun AppRoot(
@@ -40,9 +42,9 @@ fun AppRoot(
                 SplashScreen()
             }
 
+            authNavGraph(navController)
 
-
-
+            mainNavGraph(navController)
 
         }
     }
