@@ -2,6 +2,8 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.start
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bharat.mupple_sketch_app.app_root.AuthEvents
+import com.bharat.mupple_sketch_app.app_root.AuthListenerFlag
 import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.LoginWithGoogleUseCase
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +21,7 @@ data class LoginUiState(
 @HiltViewModel
 class StartViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
+    private val authListenerFlag: AuthListenerFlag
 ) : ViewModel() {
 
 
@@ -47,9 +50,20 @@ class StartViewModel @Inject constructor(
         viewModelScope.launch {
             loginWithGoogleUseCase(cred, email).collect { result ->
                 result.fold(
-                    onSuccess = { _uiState.update { it.copy(isLoading = false, loginError = null) } },
+                    onSuccess = { },
                     onFailure = { e -> _uiState.update { it.copy(isLoading = false, loginError = e.message) } }
                 )
+            }
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            authListenerFlag.authEvents.collect { event ->
+                    when(event){
+                        is AuthEvents.Success -> { _uiState.update { it.copy(isLoading = false, loginError = null) }}
+                        is AuthEvents.Error -> { _uiState.update { it.copy(isLoading = false, loginError = event.error) }}
+                    }
             }
         }
     }

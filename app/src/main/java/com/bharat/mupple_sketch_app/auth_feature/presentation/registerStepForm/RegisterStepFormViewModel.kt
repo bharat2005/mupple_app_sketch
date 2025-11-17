@@ -3,6 +3,8 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerStepForm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bharat.mupple_sketch_app.app_root.AuthEvents
+import com.bharat.mupple_sketch_app.app_root.AuthListenerFlag
 import com.bharat.mupple_sketch_app.app_root.TriggerListenerFlag
 import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.ProfileCreationUseCase
 import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.SignOutUseCase
@@ -28,6 +30,7 @@ class RegisterStepFormViewModel @Inject constructor(
     private val profileCreationUseCase: ProfileCreationUseCase,
     private val triggerListenerFlag: TriggerListenerFlag,
     private val signOutUseCase: SignOutUseCase,
+    private val authListenerFlag: AuthListenerFlag
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(StepFormState())
@@ -56,10 +59,7 @@ class RegisterStepFormViewModel @Inject constructor(
         viewModelScope.launch {
           profileCreationUseCase().collect { result ->
               result.fold(
-                  onSuccess = {
-                      _uiState.update { it.copy(isLoading = false) }
-                      triggerListenerFlag.trigger()
-                  },
+                  onSuccess = { triggerListenerFlag.trigger()  },
                   onFailure = { e ->
                       _uiState.update { it.copy(isLoading = false, profileCreationError = e.message) }
                   }
@@ -68,6 +68,19 @@ class RegisterStepFormViewModel @Inject constructor(
 
         }
     }
+
+
+    init {
+        viewModelScope.launch {
+            authListenerFlag.authEvents.collect { event ->
+                when(event){
+                    is AuthEvents.Success -> {      _uiState.update { it.copy(isLoading = false) } }
+                    is AuthEvents.Error -> {     _uiState.update { it.copy(isLoading = false, profileCreationError = event.error) }  }
+                }
+            }
+        }
+    }
+
 
 
 

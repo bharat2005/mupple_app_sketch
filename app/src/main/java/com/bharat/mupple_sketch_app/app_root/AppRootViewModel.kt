@@ -28,6 +28,7 @@ class AppRootViewModel @Inject constructor(
     private val firebaseAuth : FirebaseAuth,
     private val firestore : FirebaseFirestore,
     private val triggerListenerFlag: TriggerListenerFlag,
+    private val authListenerFlag: AuthListenerFlag
 ) : ViewModel() {
 
     private val firebaseFlow = callbackFlow {
@@ -46,21 +47,27 @@ class AppRootViewModel @Inject constructor(
     ){ firebaseAuth,_ ->
         firebaseAuth
     }.flatMapLatest { firebaseAuth ->
-                if (firebaseAuth.currentUser != null) {
-                    val uid = firebaseAuth.currentUser?.uid
-                    if (uid != null) {
-                        val userDoc = firestore.collection("users").document(uid!!).get().await()
-                        if (userDoc.exists()) {
-                            flowOf(firebaseAuth)
-                        } else {
-                            flowOf(null)
-                        }
+        try {
+            if (firebaseAuth.currentUser != null) {
+                val uid = firebaseAuth.currentUser?.uid
+                if (uid != null) {
+                    val userDoc = firestore.collection("users").document(uid!!).get().await()
+                    if (userDoc.exists()) {
+                        authListenerFlag.onSuccess()
+                        flowOf(firebaseAuth)
                     } else {
                         flowOf(null)
                     }
                 } else {
                     flowOf(null)
                 }
+            } else {
+                flowOf(null)
+            }
+        } catch ( e : Exception){
+            authListenerFlag.onError(e.message ?: "Something went wrong")
+            flowOf(null)
+        }
         }
         .map {
             if(it != null) AuthState.AUTHENTICATED else AuthState.UNAUTHENTICATED
