@@ -2,7 +2,6 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.start
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bharat.mupple_sketch_app.app_root.AuthListnerFlag
 import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.LoginWithGoogleUseCase
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +19,6 @@ data class LoginUiState(
 @HiltViewModel
 class StartViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
-    private val authListnerFlag: AuthListnerFlag
 ) : ViewModel() {
 
 
@@ -56,15 +54,7 @@ class StartViewModel @Inject constructor(
         }
     }
 
-    init {
-        viewModelScope.launch {
-            authListnerFlag.authListenerState.collect { errorMsg ->
-                if(errorMsg != null){
-                    _uiState.update { it.copy(isLoading = false, loginError = errorMsg) }
-                }
-            }
-        }
-    }
+
 
 
 

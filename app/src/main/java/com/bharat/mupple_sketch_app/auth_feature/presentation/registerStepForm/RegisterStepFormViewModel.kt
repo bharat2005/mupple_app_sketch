@@ -27,7 +27,7 @@ data class StepFormState(
 class RegisterStepFormViewModel @Inject constructor(
     private val profileCreationUseCase: ProfileCreationUseCase,
     private val triggerListenerFlag: TriggerListenerFlag,
-    private val signOutUseCase: SignOutUseCase
+    private val signOutUseCase: SignOutUseCase,
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(StepFormState())
@@ -57,9 +57,12 @@ class RegisterStepFormViewModel @Inject constructor(
           profileCreationUseCase().collect { result ->
               result.fold(
                   onSuccess = {
+                      _uiState.update { it.copy(isLoading = false) }
                       triggerListenerFlag.trigger()
                   },
-                  onFailure = { _uiState.update { it.copy(isLoading = false) }}
+                  onFailure = { e ->
+                      _uiState.update { it.copy(isLoading = false, profileCreationError = e.message) }
+                  }
               )
           }
 
