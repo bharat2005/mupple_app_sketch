@@ -5,9 +5,16 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.bharat.mupple_sketch_app.app_root.AppRoutes
+import com.bharat.mupple_sketch_app.personalization_feature.presentation.personalization.PersonalizationScreen
 
 fun NavGraphBuilder.personalizationNavGraph(navController: NavController){
     composable(AppRoutes.PersonalizationRoute) {
+        PersonalizationScreen(
+            onPersonalizationSuccess = {navController.navigate(AppRoutes.MainRoute){
+                popUpTo(AppRoutes.PersonalizationRoute){inclusive = true}
+                launchSingleTop = true
+            }}
+        )
 
     }
 }
