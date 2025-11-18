@@ -27,6 +27,11 @@ class PersonalizationViewModel @Inject constructor(
     val  uiState = _uiState.asStateFlow()
 
 
+    fun onDismissError(){
+        _uiState.update { it.copy(personalizationError = null) }
+    }
+
+
     fun onSubmitPersonalization() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {

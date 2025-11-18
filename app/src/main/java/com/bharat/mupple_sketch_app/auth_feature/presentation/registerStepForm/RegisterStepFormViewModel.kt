@@ -74,7 +74,7 @@ class RegisterStepFormViewModel @Inject constructor(
         viewModelScope.launch {
             authListenerFlag.authEvents.collect { event ->
                 when(event){
-                    is AuthEvents.Success -> {}
+                    is AuthEvents.Success -> { _uiState.update { it.copy(profileCreationError = null) }}
                     is AuthEvents.Error -> {  _uiState.update { it.copy(isLoading = false, profileCreationError = event.error) }  }
                 }
             }
