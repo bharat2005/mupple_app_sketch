@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bharat.mupple_sketch_app.app_root.AuthEvents
 import com.bharat.mupple_sketch_app.app_root.AuthListenerFlag
+import com.bharat.mupple_sketch_app.app_root.TriggerListenerFlag
 import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.RegisterWithGoogleUseCase
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,8 @@ data class RegisterUiState(
 @HiltViewModel
 class RegisterAuthViewModel @Inject constructor(
     private val registerWithGoogleUseCase: RegisterWithGoogleUseCase,
-    private val authListenerFlag: AuthListenerFlag
+    private val authListenerFlag: AuthListenerFlag,
+    private val triggerListenerFlag: TriggerListenerFlag,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -50,7 +52,7 @@ class RegisterAuthViewModel @Inject constructor(
         viewModelScope.launch {
             registerWithGoogleUseCase(cred, email).collect { result ->
                 result.fold(
-                    onSuccess = {},
+                    onSuccess = { triggerListenerFlag.trigger() },
                     onFailure = { e->
                         _uiState.update { it.copy(isLoading = false, registerError = e.message) }
                     }
@@ -64,7 +66,7 @@ class RegisterAuthViewModel @Inject constructor(
         viewModelScope.launch {
             authListenerFlag.authEvents.collect { event ->
                 when(event){
-                    is AuthEvents.Success -> {     _uiState.update { it.copy(registerSuccess = true, registerError = null, isLoading = false) }}
+                    is AuthEvents.Success -> { _uiState.update { it.copy(registerSuccess = true, registerError = null) }}
                     is AuthEvents.Error -> {  _uiState.update { it.copy(isLoading = false, registerError = event.error) } }
                 }
             }

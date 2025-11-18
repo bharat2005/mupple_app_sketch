@@ -50,7 +50,7 @@ class StartViewModel @Inject constructor(
         viewModelScope.launch {
             loginWithGoogleUseCase(cred, email).collect { result ->
                 result.fold(
-                    onSuccess = { },
+                    onSuccess = {},
                     onFailure = { e -> _uiState.update { it.copy(isLoading = false, loginError = e.message) } }
                 )
             }
@@ -61,16 +61,12 @@ class StartViewModel @Inject constructor(
         viewModelScope.launch {
             authListenerFlag.authEvents.collect { event ->
                     when(event){
-                        is AuthEvents.Success -> { _uiState.update { it.copy(isLoading = false, loginError = null) }}
+                        is AuthEvents.Success -> { _uiState.update { it.copy(loginError = null) }}
                         is AuthEvents.Error -> { _uiState.update { it.copy(isLoading = false, loginError = event.error) }}
                     }
             }
         }
     }
-
-
-
-
 
 
 

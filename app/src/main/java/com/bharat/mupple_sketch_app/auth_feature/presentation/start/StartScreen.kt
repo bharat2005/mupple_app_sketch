@@ -83,9 +83,9 @@ fun StartScreen(
 
         Button(
             onClick = {
-                viewModel.setLoading(true)
-                gsc.signOut().addOnCompleteListener {
-                    gsl.launch(gsc.signInIntent)
+                    viewModel.setLoading(true)
+                    gsc.signOut().addOnCompleteListener {
+                        gsl.launch(gsc.signInIntent)
                 }
             }
         ) {

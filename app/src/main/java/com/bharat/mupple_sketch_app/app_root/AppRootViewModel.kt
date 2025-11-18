@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +21,8 @@ import javax.inject.Inject
 enum class AuthState{
     UNKNOWN,
     UNAUTHENTICATED,
+
+    PERSONALALIZATION_INCOMPLETE,
     AUTHENTICATED
 }
 
@@ -28,7 +31,8 @@ class AppRootViewModel @Inject constructor(
     private val firebaseAuth : FirebaseAuth,
     private val firestore : FirebaseFirestore,
     private val triggerListenerFlag: TriggerListenerFlag,
-    private val authListenerFlag: AuthListenerFlag
+    private val authListenerFlag: AuthListenerFlag,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val firebaseFlow = callbackFlow {
@@ -49,33 +53,34 @@ class AppRootViewModel @Inject constructor(
     }.flatMapLatest { firebaseAuth ->
         try {
             if (firebaseAuth.currentUser != null) {
-                val uid = firebaseAuth.currentUser?.uid
-                if (uid != null) {
-                    val userDoc = firestore.collection("users").document(uid!!).get().await()
+                val uid = firebaseAuth.currentUser?.uid ?: throw Exception("From AuthListener - Current User Id is null.")
+                    val userDoc = firestore.collection("users").document(uid).get(Source.SERVER).await()
                     if (userDoc.exists()) {
-                        authListenerFlag.onSuccess()
-                        flowOf(firebaseAuth)
+                        val hasOnboardingCompleted = userDoc.getBoolean("hasOnboardingComplete") ?: false
+                        if(hasOnboardingCompleted){
+                            authListenerFlag.onSuccess()
+                            flowOf(AuthState.AUTHENTICATED)
+                        } else {
+                            authListenerFlag.onSuccess()
+                            flowOf(AuthState.PERSONALALIZATION_INCOMPLETE)
+                        }
                     } else {
-                        flowOf(null)
+                        authListenerFlag.onSuccess()
+                        flowOf(AuthState.UNAUTHENTICATED)
                     }
                 } else {
-                    flowOf(null)
-                }
-            } else {
-                flowOf(null)
+                flowOf(AuthState.UNAUTHENTICATED)
             }
         } catch ( e : Exception){
-            authListenerFlag.onError(e.message ?: "Something went wrong")
-            flowOf(null)
+            authListenerFlag.onError("From AuthListener - ${e.message ?: "Something went wrong."}")
+            flowOf(AuthState.UNAUTHENTICATED)
         }
-        }
-        .map {
-            if(it != null) AuthState.AUTHENTICATED else AuthState.UNAUTHENTICATED
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = AuthState.UNKNOWN
         )
+    val isOnline = networkMonitor.isOnline
 
 }

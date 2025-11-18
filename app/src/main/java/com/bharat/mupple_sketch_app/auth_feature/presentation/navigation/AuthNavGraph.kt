@@ -16,20 +16,22 @@ fun NavGraphBuilder.authNavGraph(navController: NavController){
     ){
         composable(AuthRoutes.StartRoute) {
             StartScreen(
-                onGetStated = {navController.navigate(AuthRoutes.RegisterAuth)}
+                onGetStated = {navController.navigate(AuthRoutes.RegisterAuth){launchSingleTop = true} }
             )
         }
 
         composable(AuthRoutes.RegisterAuth) {
             RegisterAuthAScreen(
                 onExit = {navController.navigateUp()},
-                onRegisterSuccess = {navController.navigate(AuthRoutes.RegisterStepForm)}
+                onRegisterSuccess = {navController.navigate(AuthRoutes.RegisterStepForm){launchSingleTop= true} }
             )
         }
 
         composable(AuthRoutes.RegisterStepForm) {
             RegisterStepFormScreen(
-                navigateBack = {navController.navigateUp()}
+                navigateBack = {navController.navigate(AuthRoutes.RegisterAuth){
+                    popUpTo(AuthRoutes.RegisterAuth){inclusive = true}
+                } }
 
             )
         }
