@@ -1,4 +1,4 @@
-package com.bharat.mupple_sketch_app.core.di
+package com.bharat.mupple_sketch_app.core.data.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
