@@ -52,7 +52,7 @@ fun StartScreen(
     val gsl = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
-        result ->
+            result ->
         if(result.resultCode == Activity.RESULT_OK){
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
@@ -61,11 +61,11 @@ fun StartScreen(
                 val email = account?.email ?: throw Exception("Email got null.")
                 viewModel.onLocalGoogleSignInSuccess(idToken, email)
             } catch (e : Exception){
-//                viewModel.setLoading(false)
-//                viewModel.onError(e.message ?: "Something went wrong.")
+                viewModel.setLoading(false)
+                viewModel.onError(e.message ?: "Something went wrong.")
             }
         }else {
-  //          viewModel.setLoading(false)
+            viewModel.setLoading(false)
         }
     }
 
@@ -76,16 +76,16 @@ fun StartScreen(
     ) {
 
         Button(
-        onClick = onGetStated
+            onClick = onGetStated
         ) {
             Text("Get STarted")
         }
 
         Button(
             onClick = {
-                 //   viewModel.setLoading(true)
-                    gsc.signOut().addOnCompleteListener {
-                        gsl.launch(gsc.signInIntent)
+                viewModel.setLoading(true)
+                gsc.signOut().addOnCompleteListener {
+                    gsl.launch(gsc.signInIntent)
                 }
             }
         ) {

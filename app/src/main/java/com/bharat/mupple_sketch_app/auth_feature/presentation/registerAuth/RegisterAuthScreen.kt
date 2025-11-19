@@ -62,7 +62,7 @@ fun RegisterAuthAScreen(
     val gsl = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
-        result ->
+            result ->
         if(result.resultCode == Activity.RESULT_OK){
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
@@ -72,17 +72,17 @@ fun RegisterAuthAScreen(
                 viewModel.onLocalGoogleRegisterSuccess(idToken, email)
 
             }catch (e : Exception){
-              //  viewModel.onRegisterError(e.message ?: "Something went wrong.")
+                viewModel.onRegisterError(e.message ?: "Something went wrong.")
             }
         } else {
-          //  viewModel.setLoading(false)
+            viewModel.setLoading(false)
         }
     }
 
     LaunchedEffect(uiState.registerSuccess) {
         if(uiState.registerSuccess){
             onRegisterSuccess()
-          ///  viewModel.onRemoveRegisterSuccesFlag()
+            viewModel.onRemoveRegisterSuccesFlag()
         }
     }
 
@@ -101,7 +101,7 @@ fun RegisterAuthAScreen(
 
             Button(
                 onClick = {
-                //    viewModel.setLoading(true)
+                    viewModel.setLoading(true)
                     gsc.signOut().addOnCompleteListener {
                         gsl.launch(gsc.signInIntent)
                     }
@@ -135,7 +135,7 @@ fun RegisterAuthAScreen(
     }
 
 
-    
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

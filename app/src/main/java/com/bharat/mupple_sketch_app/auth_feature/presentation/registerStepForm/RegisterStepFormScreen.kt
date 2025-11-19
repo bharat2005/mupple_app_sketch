@@ -30,7 +30,6 @@ fun RegisterStepFormScreen(
     navigateBack : () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val showExitDialog by viewModel.exitDialogState.collectAsState()
 
     BackHandler {
         viewModel.onBackPressed()
@@ -72,11 +71,11 @@ fun RegisterStepFormScreen(
             confirmButton = {
                 Button(onClick = {viewModel.onErrorDismiss()}) {Text("OK") }
             }
-            )
+        )
 
-}
+    }
 
-    if(showExitDialog){
+    if(uiState.showExitDialog){
         AlertDialog(
             onDismissRequest = {viewModel.onExitDialogDismiss()},
             title = {Text("Alert")},

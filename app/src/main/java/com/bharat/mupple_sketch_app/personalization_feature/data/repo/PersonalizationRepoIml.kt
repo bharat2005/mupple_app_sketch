@@ -17,7 +17,7 @@ class PersonalizationRepoIml @Inject constructor(
     override fun savePersonalizationDetails(): Flow<Result<Unit>> {
         return flow {
             val uid = firebaseAuth.currentUser?.uid ?: throw Exception("Uid is null.")
-            firestore.collection("users").document(uid).update("hasOnboardingComplete", true)
+            firestore.collection("users").document(uid).update("hasCompletedPersonalization", true)
                 .await()
             emit(Result.success(Unit))
 

@@ -2,110 +2,66 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerStepForm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bharat.mupple_sketch_app.app_root.AuthEvents
-import com.bharat.mupple_sketch_app.app_root.AuthListenerFlag
-import com.bharat.mupple_sketch_app.app_root.AuthOperationState
-import com.bharat.mupple_sketch_app.app_root.AuthState
-import com.bharat.mupple_sketch_app.app_root.TriggerListenerFlag
-import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.ProfileCreationUseCase
-import com.bharat.mupple_sketch_app.auth_feature.domain.usecase.SignOutUseCase
-import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepo
-import com.google.android.gms.auth.api.Auth
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.bharat.mupple_sketch_app.core.data.repo.AuthEvents
+import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 
 data class StepFormState(
     val isLoading : Boolean = false,
+    val showExitDialog : Boolean = false   ,
     val profileCreationError : String? = null
 )
 
 @HiltViewModel
 class RegisterStepFormViewModel @Inject constructor(
-    private val profileCreationUseCase: ProfileCreationUseCase,
-    private val triggerListenerFlag: TriggerListenerFlag,
-    private val signOutUseCase: SignOutUseCase,
-    private val authListenerFlag: AuthListenerFlag,
-    private val authRepo: AuthRepo
+    private  val authRepository: AuthRepository
 ): ViewModel() {
 
-    val uiState = authRepo.getAuthOperationState().map { operationState ->
-        StepFormState(
-            isLoading = operationState is AuthOperationState.Loading,
-            profileCreationError = (operationState as? AuthOperationState.Error)?.message
-        )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        StepFormState()
-    )
+    private val _uiState = MutableStateFlow(StepFormState())
+    val uiState = _uiState.asStateFlow()
 
-    private val _exitDialogState = MutableStateFlow(false)
-    val exitDialogState = _exitDialogState.asStateFlow()
-
-
-
-//    private val _uiState = MutableStateFlow(StepFormState())
-//    val uiState = _uiState.asStateFlow()
-//
     fun onErrorDismiss(){
-        authRepo.clearAuthOperationState()
-//        _uiState.update { it.copy(profileCreationError = null) }
+        _uiState.update { it.copy(profileCreationError = null) }
     }
-//
+
     fun onBackPressed(){
-        _exitDialogState.update { true }
+        _uiState.update { it.copy(showExitDialog = true) }
     }
-//
+
     fun onExitDialogDismiss(){
-        _exitDialogState.update { false }
+        _uiState.update { it.copy(showExitDialog = false) }
     }
-//
+
     fun onExitDialogConfirm(){
-        authRepo.signOut()
-        _exitDialogState.update { false }
+        authRepository.signOut()
+        _uiState.update { it.copy(showExitDialog = false) }
     }
 
 
     fun completeProfileCreation(){
-//        _uiState.update { it.copy(isLoading = true) }
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-//          profileCreationUseCase().collect { result ->
-//              result.fold(
-//                  onSuccess = { triggerListenerFlag.trigger()  },
-//                  onFailure = { e ->
-//                      _uiState.update { it.copy(isLoading = false, profileCreationError = e.message) }
-//                  }
-//              )
-//          }
-
+            authRepository.createUserProfile()
         }
     }
 
 
-//    init {
-//        viewModelScope.launch {
-//            authListenerFlag.authEvents.collect { event ->
-//                when(event){
-//                    is AuthEvents.Success -> { _uiState.update { it.copy(profileCreationError = null) }}
-//                    is AuthEvents.Error -> {  _uiState.update { it.copy(isLoading = false, profileCreationError = event.error) }  }
-//                }
-//            }
-//        }
-//    }
-
-
+    init {
+        viewModelScope.launch {
+            authRepository.getAuthEvents().collect { event ->
+                when(event){
+                    is AuthEvents.Success ->{ _uiState.update { it.copy(profileCreationError = null) } }
+                    is AuthEvents.Error -> {   _uiState.update { it.copy(isLoading = false, profileCreationError = event.message) } }
+                }
+            }
+        }
+    }
 
 
 
