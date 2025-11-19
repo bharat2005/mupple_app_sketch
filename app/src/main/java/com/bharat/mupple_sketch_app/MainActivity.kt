@@ -29,11 +29,14 @@ class MainActivity : ComponentActivity() {
         }
         enableEdgeToEdge()
 
+        if(networkMonitor.isCurrentlyConnected()){
             setContent {
                 Mupple_sketch_appTheme {
                     AppRoot()
                 }
             }
+        }
+
 
 
 

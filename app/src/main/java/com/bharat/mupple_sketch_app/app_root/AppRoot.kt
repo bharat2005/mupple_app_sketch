@@ -21,7 +21,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
-import com.bharat.mupple_sketch_app.app_root.screens.OfflineScreen
 import com.bharat.mupple_sketch_app.app_root.screens.SplashScreen
 import com.bharat.mupple_sketch_app.auth_feature.presentation.navigation.authNavGraph
 import com.bharat.mupple_sketch_app.core.data.repo.AuthState
@@ -39,7 +38,6 @@ fun AppRoot(
 
     val startDestination = when(authState){
         AuthState.UNKNOWN -> AppRoutes.SplashRoute
-        AuthState.OFFLINE -> AppRoutes.OfflineRoute
         AuthState.UNAUTHENTICATED -> AppRoutes.AuthRoute
         AuthState.PERSONALALIZATION_INCOMPLETE -> AppRoutes.PersonalizationRoute
         AuthState.AUTHENTICATED -> AppRoutes.MainRoute
@@ -61,10 +59,6 @@ fun AppRoot(
         ){
             composable(AppRoutes.SplashRoute) {
                 SplashScreen()
-            }
-
-            composable(AppRoutes.OfflineRoute) {
-                OfflineScreen()
             }
 
             authNavGraph(navController)

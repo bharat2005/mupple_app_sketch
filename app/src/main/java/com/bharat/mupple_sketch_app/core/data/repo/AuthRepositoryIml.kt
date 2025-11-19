@@ -36,7 +36,6 @@ sealed class AuthEvents{
 
 enum class AuthState{
     UNKNOWN,
-    OFFLINE,
     UNAUTHENTICATED,
     PERSONALALIZATION_INCOMPLETE,
     AUTHENTICATED,
@@ -94,7 +93,7 @@ class AuthRepositoryIml @Inject constructor(
                         }
                     } else {
                         _authEvent.emit(AuthEvents.Error("User is Offline"))
-                        flowOf(AuthState.OFFLINE)
+                        flowOf(AuthState.UNKNOWN)
 
                     }
 

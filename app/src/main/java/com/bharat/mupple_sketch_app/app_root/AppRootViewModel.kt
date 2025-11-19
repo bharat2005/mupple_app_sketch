@@ -29,9 +29,6 @@ class AppRootViewModel @Inject constructor(
     )
 
 
-    fun retriggerListener() = authRepository.retriggerListener()
-
-
 
 
 
