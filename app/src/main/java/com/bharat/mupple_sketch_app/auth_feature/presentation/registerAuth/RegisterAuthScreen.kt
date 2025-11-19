@@ -79,8 +79,10 @@ fun RegisterAuthAScreen(
         }
     }
 
-    LaunchedEffect(uiState is RegisterUiState.Success) {
+    LaunchedEffect(uiState.registerSuccess) {
+        if(uiState.registerSuccess){
             onRegisterSuccess()
+        }
     }
 
 
@@ -110,11 +112,11 @@ fun RegisterAuthAScreen(
         }
     }
 
-    if(uiState is RegisterUiState.Error){
+    if(uiState.registerError != null){
         AlertDialog(
             onDismissRequest = {viewModel.onErrorDismiss()},
             title = {Text("Error")},
-            text = {Text((uiState as RegisterUiState.Error).message)},
+            text = {Text(uiState.registerError ?: "Something went wrong.")},
             confirmButton = {
                 Button(onClick = {viewModel.onErrorDismiss()}) {Text("OK") }
             }
@@ -122,7 +124,7 @@ fun RegisterAuthAScreen(
 
     }
 
-    if(uiState is RegisterUiState.Loading){
+    if(uiState.isLoading){
         Box(
             modifier = Modifier.fillMaxSize().pointerInput(Unit){},
             contentAlignment = Alignment.Center

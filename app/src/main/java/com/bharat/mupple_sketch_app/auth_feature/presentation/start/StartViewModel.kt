@@ -38,7 +38,7 @@ class StartViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.getAuthEvent().collect { event ->
                 when(event){
-                    is AuthEvents.Success -> { _uiState.update { LoginUiState.Success } }
+                    is AuthEvents.Success -> {  }
                     is AuthEvents.Error -> { _uiState.update { LoginUiState.Error(event.message) } }
                 }
             }

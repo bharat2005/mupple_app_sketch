@@ -17,19 +17,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-sealed class RegisterUiState{
-    object Idle : RegisterUiState()
-    object Loading : RegisterUiState()
-    data class Error(val message : String) : RegisterUiState()
-    object Success : RegisterUiState()
-}
+data class RegisterUiState(
+    val isLoading : Boolean = false,
+    val registerSuccess : Boolean = false,
+    val registerError : String? = null
+)
 
 @HiltViewModel
 class RegisterAuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
+    private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState = _uiState.asStateFlow()
 
 
@@ -37,22 +36,22 @@ class RegisterAuthViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.getAuthEvent().collect { event ->
                 when(event){
-                    is AuthEvents.Success -> {_uiState.update { RegisterUiState.Success }}
-                    is AuthEvents.Error -> { _uiState.update { RegisterUiState.Error(event.message) }}
+                    is AuthEvents.Success -> { _uiState.update { it.copy(registerSuccess = true, registerError = null) } }
+                    is AuthEvents.Error -> { _uiState.update { it.copy(isLoading = false, registerSuccess = false, registerError = event.message) } }
                 }
             }
         }
     }
 
     fun setLoading(bool : Boolean){
-        _uiState.update { if(bool) RegisterUiState.Loading else RegisterUiState.Idle }
+        _uiState.update { it.copy(isLoading = bool, registerError = null) }
     }
 
     fun onError(error : String){
-    _uiState.update { RegisterUiState.Error(error) }
+        _uiState.update { it.copy(isLoading = false, registerError = error) }
     }
     fun onErrorDismiss(){
-        _uiState.update { RegisterUiState.Idle }
+        _uiState.update  { it.copy(registerError = null) }
     }
 
 
