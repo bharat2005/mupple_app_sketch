@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface AuthRepository {
 
-    fun getAuthEvents() : Flow<AuthEvents>
-
+    fun getAuthEvent() : Flow<AuthEvents>
     fun getAuthState(): Flow<AuthState>
 
     suspend fun loginWithGoogle(cred : AuthCredential, email : String)

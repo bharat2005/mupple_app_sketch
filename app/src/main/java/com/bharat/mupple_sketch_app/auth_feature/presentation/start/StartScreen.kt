@@ -61,10 +61,9 @@ fun StartScreen(
                 val email = account?.email ?: throw Exception("Email got null.")
                 viewModel.onLocalGoogleSignInSuccess(idToken, email)
             } catch (e : Exception){
-                viewModel.setLoading(false)
-                viewModel.onError(e.message ?: "Something went wrong.")
+                viewModel.onLocalError(e.message ?: "Something went wrong.")
             }
-        }else {
+        } else {
             viewModel.setLoading(false)
         }
     }
@@ -93,11 +92,11 @@ fun StartScreen(
         }
     }
 
-    if(uiState.loginError != null){
+    if(uiState is LoginUiState.Error){
         AlertDialog(
             onDismissRequest = {viewModel.onErrorDismiss()},
             title = { Text("Error") },
-            text = {Text(uiState.loginError ?: "")},
+            text = {Text((uiState as LoginUiState.Error).message ?: "")},
             confirmButton = {
                 Button(onClick = {
                     viewModel.onErrorDismiss()
@@ -106,7 +105,7 @@ fun StartScreen(
         )
     }
 
-    if(uiState.isLoading){
+    if(uiState is LoginUiState.Loading){
         Box(
             modifier = Modifier.fillMaxSize().pointerInput(Unit){},
             contentAlignment = Alignment.Center

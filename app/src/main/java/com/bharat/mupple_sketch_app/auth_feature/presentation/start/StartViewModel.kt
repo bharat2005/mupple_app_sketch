@@ -9,40 +9,55 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-data class LoginUiState(
-    val isLoading : Boolean = false,
-    val loginError : String? = null
-)
+
+sealed class LoginUiState{
+    object Idle : LoginUiState()
+    object Loading : LoginUiState()
+    data class Error(val message : String) : LoginUiState()
+    object Success : LoginUiState()
+}
 
 @HiltViewModel
 class StartViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LoginUiState())
+
+    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
 
-
-    fun onError(error : String){
-        _uiState.update { it.copy(
-            loginError = error
-        ) }
+    init {
+        viewModelScope.launch {
+            authRepository.getAuthEvent().collect { event ->
+                when(event){
+                    is AuthEvents.Success -> { _uiState.update { LoginUiState.Success } }
+                    is AuthEvents.Error -> { _uiState.update { LoginUiState.Error(event.message) } }
+                }
+            }
+        }
     }
 
-    fun setLoading(isLoading : Boolean){
-        _uiState.update { it.copy(isLoading = isLoading) }
+
+    fun setLoading(bool : Boolean){
+        _uiState.update { if(bool) LoginUiState.Loading else LoginUiState.Idle }
     }
+
+    fun onLocalError(error : String){
+        _uiState.update { LoginUiState.Error(error) }
+    }
+
 
 
     fun onErrorDismiss(){
-        _uiState.update { it.copy(loginError =  null) }
+        _uiState.update { LoginUiState.Idle }
     }
 
 
@@ -50,17 +65,6 @@ class StartViewModel @Inject constructor(
         val cred = GoogleAuthProvider.getCredential(idToken, null)
         viewModelScope.launch {
             authRepository.loginWithGoogle(cred, email)
-        }
-    }
-
-    init {
-        viewModelScope.launch {
-            authRepository.getAuthEvents().collect { event ->
-                when(event){
-                    is AuthEvents.Success -> { _uiState.update { it.copy(loginError = null) } }
-                    is AuthEvents.Error -> {_uiState.update { it.copy(isLoading = false, loginError = event.message) }}
-                }
-            }
         }
     }
 

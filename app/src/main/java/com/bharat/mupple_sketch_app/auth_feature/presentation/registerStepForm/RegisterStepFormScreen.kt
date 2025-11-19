@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bharat.mupple_sketch_app.auth_feature.presentation.start.LoginUiState
 
 @Composable
 fun RegisterStepFormScreen(
@@ -30,6 +31,7 @@ fun RegisterStepFormScreen(
     navigateBack : () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val showExitDialog by viewModel.showExitDialog.collectAsState()
 
     BackHandler {
         viewModel.onBackPressed()
@@ -54,7 +56,7 @@ fun RegisterStepFormScreen(
         }
     }
 
-    if(uiState.isLoading){
+    if(uiState is StepFormUiState.Loading){
         Box(
             modifier = Modifier.fillMaxSize().pointerInput(Unit){},
             contentAlignment = Alignment.Center
@@ -63,11 +65,11 @@ fun RegisterStepFormScreen(
         }
     }
 
-    if(uiState.profileCreationError != null){
+    if(uiState is StepFormUiState.Error){
         AlertDialog(
             onDismissRequest = {viewModel.onErrorDismiss()},
             title = {Text("Error")},
-            text = {Text(uiState.profileCreationError ?: "")},
+            text = {Text((uiState as LoginUiState.Error).message)},
             confirmButton = {
                 Button(onClick = {viewModel.onErrorDismiss()}) {Text("OK") }
             }
@@ -75,7 +77,7 @@ fun RegisterStepFormScreen(
 
     }
 
-    if(uiState.showExitDialog){
+    if(showExitDialog){
         AlertDialog(
             onDismissRequest = {viewModel.onExitDialogDismiss()},
             title = {Text("Alert")},

@@ -2,67 +2,74 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerStepForm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bharat.mupple_sketch_app.core.data.repo.AuthEvents
+import com.bharat.mupple_sketch_app.core.data.repo.AuthOperationState
 import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
+import com.google.android.gms.auth.api.Auth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-data class StepFormState(
-    val isLoading : Boolean = false,
-    val showExitDialog : Boolean = false   ,
-    val profileCreationError : String? = null
-)
+sealed class StepFormUiState{
+    object Idle : StepFormUiState()
+    object Loading : StepFormUiState()
+    data class Error(val message : String) : StepFormUiState()
+    object Success : StepFormUiState()
+}
 
 @HiltViewModel
 class RegisterStepFormViewModel @Inject constructor(
     private  val authRepository: AuthRepository
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow(StepFormState())
-    val uiState = _uiState.asStateFlow()
+
+    val uiState = authRepository.getAuthOperationState()
+        .map { state ->
+            when(state){
+                is AuthOperationState.Idle -> StepFormUiState.Idle
+                is AuthOperationState.Loading -> StepFormUiState.Loading
+                is AuthOperationState.Error -> StepFormUiState.Error(state.message)
+                is AuthOperationState.Success -> StepFormUiState.Success
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            StepFormUiState.Idle
+        )
+
+    private val _showExitDialog = MutableStateFlow(false)
+    val showExitDialog = _showExitDialog.asStateFlow()
+
 
     fun onErrorDismiss(){
-        _uiState.update { it.copy(profileCreationError = null) }
+        authRepository.clearAuthOperationState()
     }
 
     fun onBackPressed(){
-        _uiState.update { it.copy(showExitDialog = true) }
+        _showExitDialog.update { true }
     }
 
     fun onExitDialogDismiss(){
-        _uiState.update { it.copy(showExitDialog = false) }
+        _showExitDialog.update { false }
     }
 
     fun onExitDialogConfirm(){
         authRepository.signOut()
-        _uiState.update { it.copy(showExitDialog = false) }
+        _showExitDialog.update { false }
     }
 
 
     fun completeProfileCreation(){
-        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             authRepository.createUserProfile()
         }
     }
-
-
-    init {
-        viewModelScope.launch {
-            authRepository.getAuthEvents().collect { event ->
-                when(event){
-                    is AuthEvents.Success ->{ _uiState.update { it.copy(profileCreationError = null) } }
-                    is AuthEvents.Error -> {   _uiState.update { it.copy(isLoading = false, profileCreationError = event.message) } }
-                }
-            }
-        }
-    }
-
 
 
 
