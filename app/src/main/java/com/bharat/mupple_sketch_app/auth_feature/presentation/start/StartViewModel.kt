@@ -7,7 +7,9 @@ import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,6 +19,7 @@ data class LoginUiState(
     val isLoading : Boolean = false,
     val loginError : String? = null
 )
+
 @HiltViewModel
 class StartViewModel @Inject constructor(
     private val authRepository: AuthRepository
@@ -24,6 +27,8 @@ class StartViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
+
+
 
     fun onError(error : String){
         _uiState.update { it.copy(

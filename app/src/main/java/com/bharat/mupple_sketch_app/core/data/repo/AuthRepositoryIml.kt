@@ -7,11 +7,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -26,6 +29,7 @@ sealed class AuthEvents{
     object Success : AuthEvents()
     data class Error(val message : String) : AuthEvents()
 }
+
 
 enum class AuthState{
     UNKNOWN,
@@ -42,13 +46,10 @@ class AuthRepositoryIml @Inject constructor(
 ) : AuthRepository{
 
     private val _authEvents = MutableSharedFlow<AuthEvents>()
-
-    override fun getAuthEvents(): Flow<AuthEvents> {
-        return _authEvents.asSharedFlow()
-    }
-
+    override fun getAuthEvents(): Flow<AuthEvents> = _authEvents.asSharedFlow()
     private val _triggerListenerState = MutableStateFlow(0)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAuthState(): Flow<AuthState> {
         val firebaseAuthFlow = callbackFlow {
             val listener = FirebaseAuth.AuthStateListener{ firebaseAuth ->
@@ -57,7 +58,6 @@ class AuthRepositoryIml @Inject constructor(
             firebaseAuth.addAuthStateListener(listener)
             awaitClose { firebaseAuth.removeAuthStateListener(listener) }
         }
-
         return combine(
             firebaseAuthFlow,
             _triggerListenerState
@@ -67,7 +67,7 @@ class AuthRepositoryIml @Inject constructor(
                     flowOf(AuthState.UNAUTHENTICATED)
                 } else {
                     try {
-                        val userDoc = firestore.collection("users").document(user.uid!!).get(Source.SERVER).await()
+                        val userDoc = firestore.collection("users").document(user.uid).get(Source.SERVER).await()
                         if(userDoc.exists()){
                             val hasCompleted = userDoc.getBoolean("hasCompletedPersonalization") ?: false
                             _authEvents.emit(AuthEvents.Success)
@@ -96,6 +96,7 @@ class AuthRepositoryIml @Inject constructor(
                 }
             } catch (e : Exception){
                 _authEvents.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+
             }
 
         }
@@ -112,9 +113,8 @@ class AuthRepositoryIml @Inject constructor(
                     _authEvents.emit(AuthEvents.Error("User already exists."))
                 }
             } catch (e : Exception){
-                _authEvents.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+                  _authEvents.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
             }
-
         }
     }
 
@@ -130,7 +130,7 @@ class AuthRepositoryIml @Inject constructor(
                 firestore.collection("users").document(uid).set(userData).await()
                 _triggerListenerState.value++
             } catch (e : Exception){
-                _authEvents.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+                  _authEvents.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
             }
         }
     }
@@ -138,8 +138,5 @@ class AuthRepositoryIml @Inject constructor(
     override fun signOut() {
         firebaseAuth.signOut()
     }
-
-
-
 
 }
