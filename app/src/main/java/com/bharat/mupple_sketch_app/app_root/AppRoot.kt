@@ -1,5 +1,6 @@
 package com.bharat.mupple_sketch_app.app_root
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
@@ -15,13 +16,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
-import com.bharat.mupple_sketch_app.app_root.splash.SplashScreen
+import com.bharat.mupple_sketch_app.app_root.screens.OfflineScreen
+import com.bharat.mupple_sketch_app.app_root.screens.SplashScreen
 import com.bharat.mupple_sketch_app.auth_feature.presentation.navigation.authNavGraph
 import com.bharat.mupple_sketch_app.core.data.repo.AuthState
 import com.bharat.mupple_sketch_app.main_feature.presentation.navigation.mainNavGraph
@@ -38,6 +39,7 @@ fun AppRoot(
 
     val startDestination = when(authState){
         AuthState.UNKNOWN -> AppRoutes.SplashRoute
+        AuthState.OFFLINE -> AppRoutes.OfflineRoute
         AuthState.UNAUTHENTICATED -> AppRoutes.AuthRoute
         AuthState.PERSONALALIZATION_INCOMPLETE -> AppRoutes.PersonalizationRoute
         AuthState.AUTHENTICATED -> AppRoutes.MainRoute
@@ -48,9 +50,9 @@ fun AppRoot(
     }
 
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.White
+
+    Surface (
+        modifier = Modifier.fillMaxSize().background(Color.White),
     ) {
 
         NavHost(
@@ -59,6 +61,10 @@ fun AppRoot(
         ){
             composable(AppRoutes.SplashRoute) {
                 SplashScreen()
+            }
+
+            composable(AppRoutes.OfflineRoute) {
+                OfflineScreen()
             }
 
             authNavGraph(navController)
@@ -75,9 +81,8 @@ fun AppRoot(
                 text = { Text("make the internet on") },
                 title = {Text("Alert")},
                 confirmButton = {
-                    Button(onClick = {
-                        showInternetDialog = false
-                    }) {
+                    Button(onClick = { showInternetDialog = false }
+                    ) {
                         Text("Retry")
                     }
                 }

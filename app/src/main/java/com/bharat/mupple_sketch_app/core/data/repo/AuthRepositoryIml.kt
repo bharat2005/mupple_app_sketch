@@ -1,5 +1,6 @@
 package com.bharat.mupple_sketch_app.core.data.repo
 
+import com.bharat.mupple_sketch_app.app_root.NetworkMonitor
 import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import com.google.android.gms.auth.api.Auth
 import com.google.firebase.auth.AuthCredential
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -34,22 +36,28 @@ sealed class AuthEvents{
 
 enum class AuthState{
     UNKNOWN,
+    OFFLINE,
     UNAUTHENTICATED,
     PERSONALALIZATION_INCOMPLETE,
-    AUTHENTICATED
+    AUTHENTICATED,
 }
 
 
 @Singleton
 class AuthRepositoryIml @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val networkMonitor: NetworkMonitor
 ) : AuthRepository{
 
 
     private val _authEvent = MutableSharedFlow<AuthEvents>()
     override fun getAuthEvent(): Flow<AuthEvents> = _authEvent.asSharedFlow()
     private val _triggerListenerState = MutableStateFlow(0)
+
+    override fun retriggerListener() {
+        _triggerListenerState.value++
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAuthState(): Flow<AuthState> {
@@ -68,20 +76,28 @@ class AuthRepositoryIml @Inject constructor(
                 if(user == null){
                     flowOf(AuthState.UNAUTHENTICATED)
                 } else {
-                    try {
-                        val userDoc = firestore.collection("users").document(user.uid).get(Source.SERVER).await()
-                        if(userDoc.exists()){
-                            val hasCompleted = userDoc.getBoolean("hasCompletedPersonalization") ?: false
-                            _authEvent.emit(AuthEvents.Success)
-                            flowOf(if(hasCompleted) AuthState.AUTHENTICATED else AuthState.PERSONALALIZATION_INCOMPLETE )
-                        } else{
-                            _authEvent.emit(AuthEvents.Success)
+
+                    if(networkMonitor.isCurrentlyConnected()){
+                        try {
+                            val userDoc = firestore.collection("users").document(user.uid).get(Source.SERVER).await()
+                            if(userDoc.exists()){
+                                val hasCompleted = userDoc.getBoolean("hasCompletedPersonalization") ?: false
+                                _authEvent.emit(AuthEvents.Success)
+                                flowOf(if(hasCompleted) AuthState.AUTHENTICATED else AuthState.PERSONALALIZATION_INCOMPLETE )
+                            } else{
+                                _authEvent.emit(AuthEvents.Success)
+                                flowOf(AuthState.UNAUTHENTICATED)
+                            }
+                        } catch (e: Exception){
+                            _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
                             flowOf(AuthState.UNAUTHENTICATED)
                         }
-                    } catch (e: Exception){
-                        _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
-                        flowOf(AuthState.UNAUTHENTICATED)
+                    } else {
+                        _authEvent.emit(AuthEvents.Error("User is Offline"))
+                        flowOf(AuthState.OFFLINE)
+
                     }
+
                 }
             }
     }

@@ -20,7 +20,6 @@ sealed class StepFormUiState{
     object Idle : StepFormUiState()
     object Loading : StepFormUiState()
     data class Error(val message : String) : StepFormUiState()
-    object Success : StepFormUiState()
 }
 
 @HiltViewModel
@@ -36,7 +35,7 @@ class RegisterStepFormViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.getAuthEvent().collect { event ->
                 when(event){
-                    is AuthEvents.Success -> {  _uiState.update { StepFormUiState.Success } }
+                    is AuthEvents.Success -> { }
                     is AuthEvents.Error -> { _uiState.update { StepFormUiState.Error(event.message) }}
                 }
             }
@@ -66,7 +65,9 @@ class RegisterStepFormViewModel @Inject constructor(
     }
 
 
+
     fun completeProfileCreation(){
+        _uiState.update { StepFormUiState.Loading }
         viewModelScope.launch {
             authRepository.createUserProfile()
         }

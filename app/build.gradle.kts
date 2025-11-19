@@ -77,4 +77,7 @@ dependencies {
 
     //PlayServies
     implementation("com.google.android.gms:play-services-auth:21.4.0")
+
+    //SplashScreen
+    implementation("androidx.core:core-splashscreen:1.2.0")
 }

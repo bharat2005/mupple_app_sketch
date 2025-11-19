@@ -22,6 +22,8 @@ class NetworkMonitor @Inject constructor(
     private val _isOnline = MutableStateFlow(isNetworkAvailable(context))
      val isOnline = _isOnline.asStateFlow()
 
+    fun isCurrentlyConnected() : Boolean = connectivityManager?.activeNetworkInfo?.isConnectedOrConnecting ?: false
+
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: android.net.Network) {
             _isOnline.value = true

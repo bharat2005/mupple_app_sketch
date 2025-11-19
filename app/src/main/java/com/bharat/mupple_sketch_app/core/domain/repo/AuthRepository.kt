@@ -12,6 +12,8 @@ interface AuthRepository {
     fun getAuthEvent() : Flow<AuthEvents>
     fun getAuthState(): Flow<AuthState>
 
+    fun retriggerListener()
+
     suspend fun loginWithGoogle(cred : AuthCredential, email : String)
     suspend fun registerWithGoogle(cred : AuthCredential, email : String)
     suspend fun createUserProfile()
