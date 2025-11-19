@@ -2,7 +2,7 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerAuth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bharat.mupple_sketch_app.core.data.repo.AuthOperationState
+import com.bharat.mupple_sketch_app.core.data.repo.AuthEvents
 import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,27 +28,34 @@ sealed class RegisterUiState{
 class RegisterAuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
-    val uiState = authRepository.getAuthOperationState()
-        .map { state ->
-            when(state){
-                is AuthOperationState.Idle -> RegisterUiState.Idle
-                is AuthOperationState.Loading -> RegisterUiState.Loading
-                is AuthOperationState.Error -> RegisterUiState.Error(state.message)
-                is AuthOperationState.Success -> RegisterUiState.Success
+
+    private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+
+    init{
+        viewModelScope.launch {
+            authRepository.getAuthEvent().collect { event ->
+                when(event){
+                    is AuthEvents.Success -> {_uiState.update { RegisterUiState.Success }}
+                    is AuthEvents.Error -> { _uiState.update { RegisterUiState.Error(event.message) }}
+                }
             }
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            RegisterUiState.Idle
-        )
+        }
+    }
 
+    fun setLoading(bool : Boolean){
+        _uiState.update { if(bool) RegisterUiState.Loading else RegisterUiState.Idle }
+    }
+
+    fun onError(error : String){
+    _uiState.update { RegisterUiState.Error(error) }
+    }
     fun onErrorDismiss(){
-        authRepository.clearAuthOperationState()
+        _uiState.update { RegisterUiState.Idle }
     }
 
-    fun onRemoveRegisterSuccesFlag(){
-        authRepository.clearAuthOperationState()
-    }
+
     fun onLocalGoogleRegisterSuccess(idToken : String, email : String){
         val cred = GoogleAuthProvider.getCredential(idToken, null)
         viewModelScope.launch {

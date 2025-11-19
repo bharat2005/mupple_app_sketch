@@ -2,7 +2,7 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerStepForm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bharat.mupple_sketch_app.core.data.repo.AuthOperationState
+import com.bharat.mupple_sketch_app.core.data.repo.AuthEvents
 import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import com.google.android.gms.auth.api.Auth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,27 +28,28 @@ class RegisterStepFormViewModel @Inject constructor(
     private  val authRepository: AuthRepository
 ): ViewModel() {
 
+    private val _uiState = MutableStateFlow<StepFormUiState>(StepFormUiState.Idle)
+    val uiState = _uiState.asStateFlow()
 
-    val uiState = authRepository.getAuthOperationState()
-        .map { state ->
-            when(state){
-                is AuthOperationState.Idle -> StepFormUiState.Idle
-                is AuthOperationState.Loading -> StepFormUiState.Loading
-                is AuthOperationState.Error -> StepFormUiState.Error(state.message)
-                is AuthOperationState.Success -> StepFormUiState.Success
+
+    init {
+        viewModelScope.launch {
+            authRepository.getAuthEvent().collect { event ->
+                when(event){
+                    is AuthEvents.Success -> {  _uiState.update { StepFormUiState.Success } }
+                    is AuthEvents.Error -> { _uiState.update { StepFormUiState.Error(event.message) }}
+                }
             }
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            StepFormUiState.Idle
-        )
+        }
+    }
+
 
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog = _showExitDialog.asStateFlow()
 
 
     fun onErrorDismiss(){
-        authRepository.clearAuthOperationState()
+        _uiState.update { StepFormUiState.Idle }
     }
 
     fun onBackPressed(){

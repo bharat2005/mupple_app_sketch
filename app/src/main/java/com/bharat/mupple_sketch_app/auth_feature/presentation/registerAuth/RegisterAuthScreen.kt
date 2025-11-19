@@ -72,13 +72,15 @@ fun RegisterAuthAScreen(
                 viewModel.onLocalGoogleRegisterSuccess(idToken, email)
 
             }catch (e : Exception){
+                viewModel.onError(e.message ?: "Something went wrong.")
             }
+        } else {
+            viewModel.setLoading(false)
         }
     }
 
     LaunchedEffect(uiState is RegisterUiState.Success) {
             onRegisterSuccess()
-            viewModel.onRemoveRegisterSuccesFlag()
     }
 
 
@@ -96,6 +98,7 @@ fun RegisterAuthAScreen(
 
             Button(
                 onClick = {
+                    viewModel.setLoading(true)
                     gsc.signOut().addOnCompleteListener {
                         gsl.launch(gsc.signInIntent)
                     }
