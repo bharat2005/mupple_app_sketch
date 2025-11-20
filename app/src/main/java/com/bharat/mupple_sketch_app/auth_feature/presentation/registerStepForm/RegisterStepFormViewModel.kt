@@ -47,7 +47,6 @@ class RegisterStepFormViewModel @Inject constructor(
 
 
     fun onErrorDismiss(){
-       // _uiState.update { StepFormUiState.Idle }
         authRepository.clearAuthOperationState()
     }
 

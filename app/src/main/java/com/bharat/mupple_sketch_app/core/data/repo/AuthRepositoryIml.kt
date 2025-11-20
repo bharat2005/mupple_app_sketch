@@ -137,6 +137,7 @@ class AuthRepositoryIml @Inject constructor(
 
     override suspend fun createUserProfile() {
         withContext(Dispatchers.IO){
+            _authOperationState.update { AuthOperationState.Loading }
             try {
                 val uid = firebaseAuth.currentUser?.uid ?: throw Exception("Uid is null.")
                 val email = firebaseAuth.currentUser?.email ?: throw Exception("Email is null.")
