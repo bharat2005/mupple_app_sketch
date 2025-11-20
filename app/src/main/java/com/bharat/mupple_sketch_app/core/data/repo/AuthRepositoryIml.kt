@@ -7,6 +7,7 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -98,6 +99,7 @@ class AuthRepositoryIml @Inject constructor(
                                 flowOf(AuthState.UNAUTHENTICATED)
                             }
                         } catch (e: Exception){
+                            if(e is CancellationException) throw e
 //                            _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
                             _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
                             flowOf(AuthState.UNAUTHENTICATED)
