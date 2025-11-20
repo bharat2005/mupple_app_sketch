@@ -28,8 +28,6 @@ class RegisterStepFormViewModel @Inject constructor(
     private  val authRepository: AuthRepository
 ): ViewModel() {
 
-//    private val _uiState = MutableStateFlow<StepFormUiState>(StepFormUiState.Idle)
-//    val uiState = _uiState.asStateFlow()
     val uiState = authRepository.getAuthOperationState().map{state ->
         when(state){
             is AuthOperationState.Idle -> StepFormUiState.Idle
@@ -43,19 +41,6 @@ class RegisterStepFormViewModel @Inject constructor(
     init {
         authRepository.clearAuthOperationState()
     }
-
-
-//    init {
-//        viewModelScope.launch {
-//            authRepository.getAuthEvent().collect { event ->
-//                when(event){
-//                    is AuthEvents.Success -> { }
-//                    is AuthEvents.Error -> { _uiState.update { StepFormUiState.Error(event.message) }}
-//                }
-//            }
-//        }
-//    }
-
 
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog = _showExitDialog.asStateFlow()

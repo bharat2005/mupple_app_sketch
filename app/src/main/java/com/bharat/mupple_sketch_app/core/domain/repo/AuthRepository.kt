@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface AuthRepository {
 
-//    fun getAuthEvent() : Flow<AuthEvents>
     fun getAuthOperationState() : Flow<AuthOperationState>
     fun clearAuthOperationState()
     fun getAuthState(): Flow<AuthState>

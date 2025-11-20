@@ -29,11 +29,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
-//sealed class AuthEvents{
-//    data class Error(val message : String) : AuthEvents()
-//    object Success : AuthEvents()
-//}
-
 sealed class AuthOperationState{
     object Idle : AuthOperationState()
     object Loading : AuthOperationState()
@@ -56,10 +51,6 @@ class AuthRepositoryIml @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val networkMonitor: NetworkMonitor
 ) : AuthRepository{
-
-
-//    private val _authEvent = MutableSharedFlow<AuthEvents>()
-//    override fun getAuthEvent(): Flow<AuthEvents> = _authEvent.asSharedFlow()
 
     private val _authOperationState = MutableStateFlow<AuthOperationState>(AuthOperationState.Idle)
     override fun getAuthOperationState(): Flow<AuthOperationState> = _authOperationState.asStateFlow()
@@ -90,17 +81,14 @@ class AuthRepositoryIml @Inject constructor(
                             val userDoc = firestore.collection("users").document(user.uid).get(Source.SERVER).await()
                             if(userDoc.exists()){
                                 val hasCompleted = userDoc.getBoolean("hasCompletedPersonalization") ?: false
-//                                _authEvent.emit(AuthEvents.Success)
                                 _authOperationState.update { AuthOperationState.Success  }
                                 flowOf(if(hasCompleted) AuthState.AUTHENTICATED else AuthState.PERSONALALIZATION_INCOMPLETE )
                             } else{
-//                                _authEvent.emit(AuthEvents.Success)
                                 _authOperationState.update { AuthOperationState.Success  }
                                 flowOf(AuthState.UNAUTHENTICATED)
                             }
                         } catch (e: Exception){
                             if(e is CancellationException) throw e
-//                            _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
                             _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
                             flowOf(AuthState.UNAUTHENTICATED)
                         }
@@ -121,10 +109,8 @@ class AuthRepositoryIml @Inject constructor(
                     _triggerListenerState.value++
                 } else {
                     _authOperationState.update { AuthOperationState.Error("User does not exists.")  }
-//                    _authEvent.emit(AuthEvents.Error("User does not exists."))
                 }
             } catch (e : Exception){
-//                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
                 _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
 
             }
@@ -141,11 +127,9 @@ class AuthRepositoryIml @Inject constructor(
                     firebaseAuth.signInWithCredential(cred).await()
                     _triggerListenerState.value++
                 } else {
-//                    _authEvent.emit(AuthEvents.Error("User already exists with this account."))
                     _authOperationState.update { AuthOperationState.Error("User alredy exists with this account.")  }
                 }
             } catch (e : Exception){
-//                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
                 _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
             }
         }
@@ -164,7 +148,6 @@ class AuthRepositoryIml @Inject constructor(
                 _triggerListenerState.value++
             } catch (e : Exception){
                 _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.") }
-//                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
             }
         }
     }

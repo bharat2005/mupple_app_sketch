@@ -31,10 +31,6 @@ class StartViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-
-//    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-//    val uiState = _uiState.asStateFlow()
-
     val uiState = authRepository.getAuthOperationState().map { state ->
         when(state){
             is AuthOperationState.Idle -> LoginUiState.Idle
@@ -48,30 +44,6 @@ class StartViewModel @Inject constructor(
     init {
         authRepository.clearAuthOperationState()
     }
-
-
-//    init {
-//        viewModelScope.launch {
-//            authRepository.getAuthEvent().collect { event ->
-//                when(event){
-//                    is AuthEvents.Success -> {  }
-//                    is AuthEvents.Error -> { _uiState.update { LoginUiState.Error(event.message) } }
-//                }
-//            }
-//        }
-//    }
-
-
-//    fun setLoading(bool : Boolean){
-////        _uiState.update { if(bool) LoginUiState.Loading else LoginUiState.Idle }
-//    }
-
-//    fun onLocalError(error : String){
-//        _uiState.update { LoginUiState.Error(error) }
-//    }
-
-
-
 
 
     fun onErrorDismiss(){

@@ -42,11 +42,12 @@ fun RegisterStepFormScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ){
-        Text("RegistrationStepform screen")
 
         Button(
             onClick = {
-                viewModel.completeProfileCreation()
+                if(uiState !is StepFormUiState.Success){
+                    viewModel.completeProfileCreation()
+                }
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Red

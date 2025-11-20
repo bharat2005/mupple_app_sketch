@@ -100,9 +100,10 @@ fun RegisterAuthAScreen(
 
             Button(
                 onClick = {
-                   // viewModel.setLoading(true)
-                    gsc.signOut().addOnCompleteListener {
-                        gsl.launch(gsc.signInIntent)
+                    if(uiState !is RegisterUiState.Success){
+                        gsc.signOut().addOnCompleteListener {
+                            gsl.launch(gsc.signInIntent)
+                        }
                     }
                 }
             ) {

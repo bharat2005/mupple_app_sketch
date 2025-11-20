@@ -18,11 +18,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-//data class RegisterUiState(
-//    val isLoading : Boolean = false,
-//    val registerSuccess : Boolean = false,
-//    val registerError : String? = null
-//)
 
 sealed class RegisterUiState{
     object Idle : RegisterUiState()
@@ -37,8 +32,6 @@ class RegisterAuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-//    private val _uiState = MutableStateFlow(RegisterUiState())
-//    val uiState = _uiState.asStateFlow()
     val uiState = authRepository.getAuthOperationState().map { state ->
         when(state){
             is AuthOperationState.Idle -> RegisterUiState.Idle
@@ -53,26 +46,7 @@ init {
 }
 
 
-//    init{
-//        viewModelScope.launch {
-//            authRepository.getAuthEvent().collect { event ->
-//                when(event){
-//                    is AuthEvents.Success -> { _uiState.update { it.copy(registerSuccess = true, registerError = null) } }
-//                    is AuthEvents.Error -> { _uiState.update { it.copy(isLoading = false, registerSuccess = false, registerError = event.message) } }
-//                }
-//            }
-//        }
-//    }
-
-//    fun setLoading(bool : Boolean){
-//        _uiState.update { it.copy(isLoading = bool, registerError = null) }
-//    }
-
-//    fun onError(error : String){
-//        _uiState.update { it.copy(isLoading = false, registerError = error) }
-//    }
     fun onErrorDismiss(){
-      //  _uiState.update  { it.copy(registerError = null) }
         authRepository.clearAuthOperationState()
     }
 

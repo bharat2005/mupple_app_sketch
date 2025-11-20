@@ -69,22 +69,29 @@ fun StartScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars),
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars),
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Button(
-            onClick = onGetStated
+            onClick = {
+                if(uiState !is LoginUiState.Success){
+                    onGetStated()
+                }
+            }
         ) {
             Text("Get STarted")
         }
 
         Button(
             onClick = {
-                //viewModel.setLoading(true)
-                gsc.signOut().addOnCompleteListener {
-                    gsl.launch(gsc.signInIntent)
+                if(uiState !is LoginUiState.Success){
+                    gsc.signOut().addOnCompleteListener {
+                        gsl.launch(gsc.signInIntent)
+                    }
                 }
             }
         ) {
@@ -107,7 +114,9 @@ fun StartScreen(
 
     if(uiState is LoginUiState.Loading){
         Box(
-            modifier = Modifier.fillMaxSize().pointerInput(Unit){},
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {},
             contentAlignment = Alignment.Center
         ){
             CircularProgressIndicator()
