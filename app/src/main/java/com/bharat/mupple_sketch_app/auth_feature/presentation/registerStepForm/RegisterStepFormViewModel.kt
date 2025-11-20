@@ -2,7 +2,7 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.registerStepForm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bharat.mupple_sketch_app.core.data.repo.AuthEvents
+import com.bharat.mupple_sketch_app.core.data.repo.AuthOperationState
 import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import com.google.android.gms.auth.api.Auth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +20,7 @@ sealed class StepFormUiState{
     object Idle : StepFormUiState()
     object Loading : StepFormUiState()
     data class Error(val message : String) : StepFormUiState()
+    object Success : StepFormUiState()
 }
 
 @HiltViewModel
@@ -27,20 +28,33 @@ class RegisterStepFormViewModel @Inject constructor(
     private  val authRepository: AuthRepository
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow<StepFormUiState>(StepFormUiState.Idle)
-    val uiState = _uiState.asStateFlow()
+//    private val _uiState = MutableStateFlow<StepFormUiState>(StepFormUiState.Idle)
+//    val uiState = _uiState.asStateFlow()
+    val uiState = authRepository.getAuthOperationState().map{state ->
+        when(state){
+            is AuthOperationState.Idle -> StepFormUiState.Idle
+            is AuthOperationState.Loading -> StepFormUiState.Loading
+            is AuthOperationState.Error -> StepFormUiState.Error(state.message)
+            is AuthOperationState.Success -> StepFormUiState.Success
+        }
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StepFormUiState.Idle)
 
 
     init {
-        viewModelScope.launch {
-            authRepository.getAuthEvent().collect { event ->
-                when(event){
-                    is AuthEvents.Success -> { }
-                    is AuthEvents.Error -> { _uiState.update { StepFormUiState.Error(event.message) }}
-                }
-            }
-        }
+        authRepository.clearAuthOperationState()
     }
+
+
+//    init {
+//        viewModelScope.launch {
+//            authRepository.getAuthEvent().collect { event ->
+//                when(event){
+//                    is AuthEvents.Success -> { }
+//                    is AuthEvents.Error -> { _uiState.update { StepFormUiState.Error(event.message) }}
+//                }
+//            }
+//        }
+//    }
 
 
     private val _showExitDialog = MutableStateFlow(false)
@@ -48,7 +62,8 @@ class RegisterStepFormViewModel @Inject constructor(
 
 
     fun onErrorDismiss(){
-        _uiState.update { StepFormUiState.Idle }
+       // _uiState.update { StepFormUiState.Idle }
+        authRepository.clearAuthOperationState()
     }
 
     fun onBackPressed(){
@@ -67,7 +82,7 @@ class RegisterStepFormViewModel @Inject constructor(
 
 
     fun completeProfileCreation(){
-        _uiState.update { StepFormUiState.Loading }
+      //  _uiState.update { StepFormUiState.Loading }
         viewModelScope.launch {
             authRepository.createUserProfile()
         }

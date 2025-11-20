@@ -72,15 +72,15 @@ fun RegisterAuthAScreen(
                 viewModel.onLocalGoogleRegisterSuccess(idToken, email)
 
             }catch (e : Exception){
-                viewModel.onError(e.message ?: "Something went wrong.")
+               // viewModel.onError(e.message ?: "Something went wrong.")
             }
         } else {
-            viewModel.setLoading(false)
+         //   viewModel.setLoading(false)
         }
     }
 
-    LaunchedEffect(uiState.registerSuccess) {
-        if(uiState.registerSuccess){
+    LaunchedEffect(uiState) {
+        if(uiState is RegisterUiState.Success){
             onRegisterSuccess()
         }
     }
@@ -100,7 +100,7 @@ fun RegisterAuthAScreen(
 
             Button(
                 onClick = {
-                    viewModel.setLoading(true)
+                   // viewModel.setLoading(true)
                     gsc.signOut().addOnCompleteListener {
                         gsl.launch(gsc.signInIntent)
                     }
@@ -112,11 +112,11 @@ fun RegisterAuthAScreen(
         }
     }
 
-    if(uiState.registerError != null){
+    if(uiState is RegisterUiState.Error){
         AlertDialog(
             onDismissRequest = {viewModel.onErrorDismiss()},
             title = {Text("Error")},
-            text = {Text(uiState.registerError ?: "Something went wrong.")},
+            text = {Text((uiState as RegisterUiState.Error).message)},
             confirmButton = {
                 Button(onClick = {viewModel.onErrorDismiss()}) {Text("OK") }
             }
@@ -124,7 +124,7 @@ fun RegisterAuthAScreen(
 
     }
 
-    if(uiState.isLoading){
+    if(uiState is RegisterUiState.Loading){
         Box(
             modifier = Modifier.fillMaxSize().pointerInput(Unit){},
             contentAlignment = Alignment.Center

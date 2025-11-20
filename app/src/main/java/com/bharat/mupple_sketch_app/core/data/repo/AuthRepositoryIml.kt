@@ -28,9 +28,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
-sealed class AuthEvents{
-    data class Error(val message : String) : AuthEvents()
-    object Success : AuthEvents()
+//sealed class AuthEvents{
+//    data class Error(val message : String) : AuthEvents()
+//    object Success : AuthEvents()
+//}
+
+sealed class AuthOperationState{
+    object Idle : AuthOperationState()
+    object Loading : AuthOperationState()
+    data class Error(val message : String) : AuthOperationState()
+    object Success : AuthOperationState()
 }
 
 
@@ -50,13 +57,15 @@ class AuthRepositoryIml @Inject constructor(
 ) : AuthRepository{
 
 
-    private val _authEvent = MutableSharedFlow<AuthEvents>()
-    override fun getAuthEvent(): Flow<AuthEvents> = _authEvent.asSharedFlow()
+//    private val _authEvent = MutableSharedFlow<AuthEvents>()
+//    override fun getAuthEvent(): Flow<AuthEvents> = _authEvent.asSharedFlow()
+
+    private val _authOperationState = MutableStateFlow<AuthOperationState>(AuthOperationState.Idle)
+    override fun getAuthOperationState(): Flow<AuthOperationState> = _authOperationState.asStateFlow()
+    override fun clearAuthOperationState() { _authOperationState.update { AuthOperationState.Idle }}
     private val _triggerListenerState = MutableStateFlow(0)
 
-    override fun retriggerListener() {
-        _triggerListenerState.value++
-    }
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAuthState(): Flow<AuthState> {
@@ -75,44 +84,46 @@ class AuthRepositoryIml @Inject constructor(
                 if(user == null){
                     flowOf(AuthState.UNAUTHENTICATED)
                 } else {
-
                     if(networkMonitor.isCurrentlyConnected()){
                         try {
                             val userDoc = firestore.collection("users").document(user.uid).get(Source.SERVER).await()
                             if(userDoc.exists()){
                                 val hasCompleted = userDoc.getBoolean("hasCompletedPersonalization") ?: false
-                                _authEvent.emit(AuthEvents.Success)
+//                                _authEvent.emit(AuthEvents.Success)
+                                _authOperationState.update { AuthOperationState.Success  }
                                 flowOf(if(hasCompleted) AuthState.AUTHENTICATED else AuthState.PERSONALALIZATION_INCOMPLETE )
                             } else{
-                                _authEvent.emit(AuthEvents.Success)
+//                                _authEvent.emit(AuthEvents.Success)
+                                _authOperationState.update { AuthOperationState.Success  }
                                 flowOf(AuthState.UNAUTHENTICATED)
                             }
                         } catch (e: Exception){
-                            _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+//                            _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+                            _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
                             flowOf(AuthState.UNAUTHENTICATED)
                         }
                     } else {
-                        _authEvent.emit(AuthEvents.Error("User is Offline"))
                         flowOf(AuthState.UNKNOWN)
-
                     }
-
                 }
             }
     }
 
     override suspend fun loginWithGoogle(cred: AuthCredential, email: String) {
         withContext(Dispatchers.IO){
+            _authOperationState.update { AuthOperationState.Loading }
             try {
                 val query = firestore.collection("users").whereEqualTo("email", email).get(Source.SERVER).await()
                 if(!query.isEmpty){
                     firebaseAuth.signInWithCredential(cred).await()
                     _triggerListenerState.value++
                 } else {
-                    _authEvent.emit(AuthEvents.Error("User does not exists."))
+                    _authOperationState.update { AuthOperationState.Error("User does not exists.")  }
+//                    _authEvent.emit(AuthEvents.Error("User does not exists."))
                 }
             } catch (e : Exception){
-                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+//                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+                _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
 
             }
 
@@ -121,16 +132,19 @@ class AuthRepositoryIml @Inject constructor(
 
     override suspend fun registerWithGoogle(cred: AuthCredential, email: String) {
         withContext(Dispatchers.IO){
+            _authOperationState.update { AuthOperationState.Loading }
             try {
                 val query = firestore.collection("users").whereEqualTo("email", email).get(Source.SERVER).await()
                 if(query.isEmpty){
                     firebaseAuth.signInWithCredential(cred).await()
                     _triggerListenerState.value++
                 } else {
-                    _authEvent.emit(AuthEvents.Error("User already exists with this account."))
+//                    _authEvent.emit(AuthEvents.Error("User already exists with this account."))
+                    _authOperationState.update { AuthOperationState.Error("User alredy exists with this account.")  }
                 }
             } catch (e : Exception){
-                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+//                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+                _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.")  }
             }
         }
     }
@@ -147,7 +161,8 @@ class AuthRepositoryIml @Inject constructor(
                 firestore.collection("users").document(uid).set(userData).await()
                 _triggerListenerState.value++
             } catch (e : Exception){
-                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
+                _authOperationState.update { AuthOperationState.Error(e.message ?: "Something went wrong.") }
+//                _authEvent.emit(AuthEvents.Error(e.message ?: "Something went wrong."))
             }
         }
     }

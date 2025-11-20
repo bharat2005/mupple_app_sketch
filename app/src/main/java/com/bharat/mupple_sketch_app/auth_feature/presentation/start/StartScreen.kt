@@ -61,10 +61,10 @@ fun StartScreen(
                 val email = account?.email ?: throw Exception("Email got null.")
                 viewModel.onLocalGoogleSignInSuccess(idToken, email)
             } catch (e : Exception){
-                viewModel.onLocalError(e.message ?: "Something went wrong.")
+                //viewModel.onLocalError(e.message ?: "Something went wrong.")
             }
         } else {
-            viewModel.setLoading(false)
+           // viewModel.setLoading(false)
         }
     }
 
@@ -82,7 +82,7 @@ fun StartScreen(
 
         Button(
             onClick = {
-                viewModel.setLoading(true)
+                //viewModel.setLoading(true)
                 gsc.signOut().addOnCompleteListener {
                     gsl.launch(gsc.signInIntent)
                 }

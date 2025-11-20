@@ -2,7 +2,7 @@ package com.bharat.mupple_sketch_app.auth_feature.presentation.start
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bharat.mupple_sketch_app.core.data.repo.AuthEvents
+import com.bharat.mupple_sketch_app.core.data.repo.AuthOperationState
 import com.bharat.mupple_sketch_app.core.domain.repo.AuthRepository
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +22,8 @@ sealed class LoginUiState{
     object Loading : LoginUiState()
     data class Error(val message : String) : LoginUiState()
 
+    object Success : LoginUiState()
+
 }
 
 @HiltViewModel
@@ -30,34 +32,51 @@ class StartViewModel @Inject constructor(
 ) : ViewModel() {
 
 
-    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-    val uiState = _uiState.asStateFlow()
+//    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
+//    val uiState = _uiState.asStateFlow()
+
+    val uiState = authRepository.getAuthOperationState().map { state ->
+        when(state){
+            is AuthOperationState.Idle -> LoginUiState.Idle
+            is AuthOperationState.Loading -> LoginUiState.Loading
+            is AuthOperationState.Success -> LoginUiState.Success
+            is AuthOperationState.Error-> LoginUiState.Error(state.message)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LoginUiState.Idle)
 
 
     init {
-        viewModelScope.launch {
-            authRepository.getAuthEvent().collect { event ->
-                when(event){
-                    is AuthEvents.Success -> {  }
-                    is AuthEvents.Error -> { _uiState.update { LoginUiState.Error(event.message) } }
-                }
-            }
-        }
+        authRepository.clearAuthOperationState()
     }
 
 
-    fun setLoading(bool : Boolean){
-        _uiState.update { if(bool) LoginUiState.Loading else LoginUiState.Idle }
-    }
+//    init {
+//        viewModelScope.launch {
+//            authRepository.getAuthEvent().collect { event ->
+//                when(event){
+//                    is AuthEvents.Success -> {  }
+//                    is AuthEvents.Error -> { _uiState.update { LoginUiState.Error(event.message) } }
+//                }
+//            }
+//        }
+//    }
 
-    fun onLocalError(error : String){
-        _uiState.update { LoginUiState.Error(error) }
-    }
+
+//    fun setLoading(bool : Boolean){
+////        _uiState.update { if(bool) LoginUiState.Loading else LoginUiState.Idle }
+//    }
+
+//    fun onLocalError(error : String){
+//        _uiState.update { LoginUiState.Error(error) }
+//    }
+
+
 
 
 
     fun onErrorDismiss(){
-        _uiState.update { LoginUiState.Idle }
+        //_uiState.update { LoginUiState.Idle }
+        authRepository.clearAuthOperationState()
     }
 
 
