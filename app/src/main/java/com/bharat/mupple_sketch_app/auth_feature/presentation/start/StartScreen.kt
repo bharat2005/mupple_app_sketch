@@ -61,10 +61,8 @@ fun StartScreen(
                 val email = account?.email ?: throw Exception("Email got null.")
                 viewModel.onLocalGoogleSignInSuccess(idToken, email)
             } catch (e : Exception){
-                //viewModel.onLocalError(e.message ?: "Something went wrong.")
+              throw e
             }
-        } else {
-           // viewModel.setLoading(false)
         }
     }
 

@@ -47,7 +47,6 @@ class StartViewModel @Inject constructor(
 
 
     fun onErrorDismiss(){
-        //_uiState.update { LoginUiState.Idle }
         authRepository.clearAuthOperationState()
     }
 
